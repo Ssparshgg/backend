@@ -21,7 +21,7 @@ connectDB();
 app.use(
 	cors({
 		origin: [
-			"https://shiftly-staff.netlify.app/",
+			"https://staffmanagement-iota.vercel.app/",
 			"http://localhost:8080",
 			"http://localhost:3000",
 		],
@@ -48,3 +48,7 @@ app.get("/api/hello", (req, res) => {
 app.listen(PORT, () => {
 	console.log(`Server running on http://localhost:${PORT}`);
 });
+
+//nohup npm start > server.log &
+
+//209.38.41.249
