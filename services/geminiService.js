@@ -152,7 +152,7 @@ function createSchedulePrompt(
 	return `You are an expert scheduling assistant. Generate an optimal work schedule for the following requirements:
 
 SCHEDULE PERIOD: ${startDateStr} to ${endDateStr}
-ALL TIMES ARE IN UTC+5:30 (Indian Standard Time).
+ALL TIMES ARE IN UTC+2 (Central European Time).
 
 MANAGER REQUIREMENTS:
 ${JSON.stringify(managerPreferences, null, 2)}
@@ -245,7 +245,7 @@ async function parseShiftProposal(naturalLanguage, userId) {
 	const today = new Date();
 	const prompt = `You are an expert scheduling assistant. A staff member wants to propose one or more shifts using natural language.\n\nInput: "${naturalLanguage}"\n\nToday is ${
 		today.toISOString().split("T")[0]
-	} (ISO format, YYYY-MM-DD).\nALL TIMES ARE IN UTC+5:30 (Indian Standard Time).\n\nParse the input and return a JSON array of shift objects. Each shift object should have:\n- title: string (e.g. "Proposed Shift")\n- startTime: ISO 8601 datetime string (YYYY-MM-DDTHH:mm:ss.sssZ) for the next occurrence of the requested day/time\n- endTime: ISO 8601 datetime string (YYYY-MM-DDTHH:mm:ss.sssZ)\n- assignedTo: the provided userId\n- role: always "staff"\n- description: a short description\n\nIf the input contains multiple days or times, return one shift object for each. If ambiguous, make a reasonable guess. Always return a valid JSON array.`;
+	} (ISO format, YYYY-MM-DD).\nALL TIMES ARE IN UTC+2 (Central European Time).\n\nParse the input and return a JSON array of shift objects. Each shift object should have:\n- title: string (e.g. "Proposed Shift")\n- startTime: ISO 8601 datetime string (YYYY-MM-DDTHH:mm:ss.sssZ) for the next occurrence of the requested day/time\n- endTime: ISO 8601 datetime string (YYYY-MM-DDTHH:mm:ss.sssZ)\n- assignedTo: the provided userId\n- role: always "staff"\n- description: a short description\n\nIf the input contains multiple days or times, return one shift object for each. If ambiguous, make a reasonable guess. Always return a valid JSON array.`;
 
 	const response = await ai.models.generateContent({
 		model: "gemini-2.5-pro",
