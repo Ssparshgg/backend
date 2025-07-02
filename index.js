@@ -1,5 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+const https = require("https");
+const http = require("http");
+const fs = require("fs");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "config.env") });
 const connectDB = require("./config/database");
@@ -13,15 +16,16 @@ const aiScheduleRoutes = require("./routes/aiScheduleRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HTTPS_PORT = process.env.HTTPS_PORT || 443;
 
 // Connect to MongoDB
 connectDB();
 
-// Updated CORS configuration to allow your Netlify domain
+// Updated CORS configuration
 app.use(
 	cors({
 		origin: [
-			"https://staffmanagement-iota.vercel.app/",
+			"https://staffmanagement-iota.vercel.app",
 			"http://localhost:8080",
 			"http://localhost:3000",
 		],
@@ -45,10 +49,45 @@ app.get("/api/hello", (req, res) => {
 	res.json({ message: "Hello from Express backend!" });
 });
 
-app.listen(PORT, () => {
-	console.log(`Server running on http://localhost:${PORT}`);
-});
+// Check if SSL certificates exist
+const certPath = "/etc/letsencrypt/live/sparsh.anshtyagi.me/fullchain.pem";
+const keyPath = "/etc/letsencrypt/live/sparsh.anshtyagi.me/privkey.pem";
+
+if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+	// HTTPS Server
+	const options = {
+		key: fs.readFileSync(keyPath),
+		cert: fs.readFileSync(certPath),
+	};
+
+	https.createServer(options, app).listen(HTTPS_PORT, () => {
+		console.log(
+			`HTTPS Server running on https://sparsh.anshtyagi.me:${HTTPS_PORT}`
+		);
+	});
+
+	// HTTP Server - redirect to HTTPS
+	http
+		.createServer((req, res) => {
+			res.writeHead(301, {
+				Location:
+					"https://" +
+					req.headers["host"].replace(`:${PORT}`, `:${HTTPS_PORT}`) +
+					req.url,
+			});
+			res.end();
+		})
+		.listen(PORT, () => {
+			console.log(`HTTP Server running on port ${PORT} - redirecting to HTTPS`);
+		});
+} else {
+	// Fallback to HTTP if certificates don't exist
+	app.listen(PORT, () => {
+		console.log(
+			`HTTP Server running on http://localhost:${PORT} (No SSL certificates found)`
+		);
+	});
+}
 
 //nohup npm start > server.log &
-
 //209.38.41.249
