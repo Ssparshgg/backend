@@ -272,11 +272,26 @@ const getAIScheduleStats = async (req, res) => {
 			});
 		}
 
-		// Get staff count
-		const staffCount = await User.countDocuments({
+		// Get all staff under this manager
+		const staffMembers = await User.find({
 			managerId: targetManagerId,
 			role: "staff",
 		});
+
+		if (staffMembers.length === 0) {
+			return res.status(400).json({
+				success: false,
+				message: "No staff members found under this manager",
+			});
+		}
+
+		// Get preferences for all staff members
+		const staffPreferences = await WorkPreference.find({
+			userId: { $in: staffMembers.map((staff) => staff._id) },
+		});
+
+		// Only count staff with preferences set
+		const staffCount = staffPreferences.length;
 
 		// Get existing shifts count
 		const existingShiftsCount = await Shift.countDocuments({
