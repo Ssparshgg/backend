@@ -149,6 +149,18 @@ function createSchedulePrompt(
 	const startDateStr = startDate.toISOString().split("T")[0];
 	const endDateStr = endDate.toISOString().split("T")[0];
 
+	// Extract manager's available time slots for each day
+	const managerTimeSlots = managerPreferences.preferences;
+	const managerTimeInstructions = Object.entries(managerTimeSlots)
+		.map(([day, slots]) => {
+			if (slots.length === 0)
+				return `${day.charAt(0).toUpperCase() + day.slice(1)}: Not available`;
+			return `${day.charAt(0).toUpperCase() + day.slice(1)}: ${slots.join(
+				", "
+			)}`;
+		})
+		.join("\n");
+
 	return `You are an expert scheduling assistant. Generate an optimal work schedule for the following requirements:
 
 SCHEDULE PERIOD: ${startDateStr} to ${endDateStr}
@@ -156,6 +168,9 @@ ALL TIMES ARE IN UTC+2 (Central European Time).
 
 MANAGER REQUIREMENTS:
 ${JSON.stringify(managerPreferences, null, 2)}
+
+MANAGER AVAILABLE TIME SLOTS (STRICT):
+${managerTimeInstructions}
 
 STAFF PREFERENCES:
 ${JSON.stringify(staffPreferences, null, 2)}
@@ -168,6 +183,7 @@ INSTRUCTIONS:
 5. Generate shifts that cover the required hours for each day
 6. Use realistic shift durations (typically 4-8 hours)
 7. Ensure proper coverage for all required time slots
+8. DO NOT generate any shift that starts before or ends after the manager's available time slot for that day. All shifts must be fully contained within the manager's available time for that day (see above). For example, if the manager's available time is 09:00-17:00, no shift should start before 09:00 or end after 17:00.
 
 CONSTRAINTS:
 - Each shift must have a unique title
@@ -176,7 +192,7 @@ CONSTRAINTS:
 - Respect the required number of staff per day
 - Avoid scheduling conflicts for individual staff members
 
-Generate a schedule that optimizes coverage while respecting staff preferences.`;
+Generate a schedule that optimizes coverage while respecting staff preferences and strictly adheres to the manager's available time slots for each day.`;
 }
 
 /**
