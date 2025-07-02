@@ -42,6 +42,16 @@ const createShift = async (req, res) => {
 	try {
 		let shiftData = { ...req.body, createdBy: req.user._id };
 
+		// Date validation: Prevent booking before today
+		const now = new Date();
+		now.setHours(0, 0, 0, 0); // Set to start of today
+		const shiftStart = new Date(shiftData.startTime);
+		if (shiftStart < now) {
+			return res
+				.status(400)
+				.json({ message: "Cannot book a shift before today." });
+		}
+
 		// If staff is creating a shift (proposing)
 		if (req.user.role === "staff") {
 			shiftData.assignedTo = req.user._id;
@@ -289,6 +299,19 @@ async function proposeShiftSave(req, res) {
 				.status(400)
 				.json({ message: "userId and previewShifts (array) are required" });
 		}
+
+		// Date validation: Prevent booking before today for any shift
+		const now = new Date();
+		now.setHours(0, 0, 0, 0);
+		for (const previewShift of previewShifts) {
+			const shiftStart = new Date(previewShift.startTime);
+			if (shiftStart < now) {
+				return res
+					.status(400)
+					.json({ message: "Cannot book a shift before today." });
+			}
+		}
+
 		// Save all shifts as proposed (pending manager approval)
 		const savedShifts = [];
 		for (const previewShift of previewShifts) {
